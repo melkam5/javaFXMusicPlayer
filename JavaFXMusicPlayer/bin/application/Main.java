@@ -2,8 +2,10 @@ package application;
 
 
 import java.io.File;
+import java.io.ObjectInputFilter.Status;
 import java.util.List;
 import javafx.application.Application;
+
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -12,12 +14,14 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
+import javafx.util.Duration;
 
 public class Main extends Application {
 
@@ -32,12 +36,87 @@ public class Main extends Application {
     Text radioText1 = new Text(" Shuffling");
 
     LinkedList songs = new LinkedList();
-    Button playbtn ;
+    Node currentPlaying;
+    MediaPlayer mediaPlayer;
+    Media media;
+    Slider slider;
+    boolean playing ;
+    boolean paused ;
     boolean loop = true;
     boolean shuffling ;
+    Button playbtn ;
     String playicon = "▶";
 
-    Slider slider;
+    public void playSongs() {
+
+        if (currentPlaying == null) {
+            currentPlaying = songs.head;
+        }
+
+        File file = new File(currentPlaying.filepath);
+        media = new Media(file.toURI().toString());
+        mediaPlayer = new MediaPlayer(media);
+
+        slider.setOnMouseClicked(e -> {
+            mediaPlayer.seek(Duration.seconds(slider.getValue()));
+        });
+
+        mediaPlayer.currentTimeProperty()
+                .addListener((ObservableValue<? extends Duration> observable, Duration oldValue, Duration newValue) -> {
+                    slider.setMax(media.getDuration().toSeconds());
+                    slider.setValue(newValue.toSeconds());
+                });
+
+        mediaPlayer.setOnEndOfMedia(() -> {
+            if (currentPlaying.next != null) {
+                currentPlaying = currentPlaying.next;
+                mediaPlayer.stop();
+                playSongs();
+
+            } else if (loop) {
+                currentPlaying = songs.head;
+                mediaPlayer.stop();
+                playSongs();
+
+            }
+        });
+        paused =false ;
+		playicon = "II";
+        playbtn.setText(playicon);
+        playing = true;
+        mediaPlayer.play();
+
+    }
+
+
+    public void playNext() {
+        if (currentPlaying.next != null) {
+            currentPlaying = currentPlaying.next;
+            mediaPlayer.stop();
+            playSongs();
+        } else if (currentPlaying.next == null && loop==true  ){
+            currentPlaying = songs.head;
+            mediaPlayer.stop();
+            playSongs();
+
+        }
+        else {
+        	mediaPlayer.stop();
+        }
+    }
+
+    public void playPrev() {
+        if (currentPlaying.prev != null) {
+            currentPlaying = currentPlaying.prev;
+            mediaPlayer.stop();
+            playSongs();
+        } else  {
+            currentPlaying = songs.tail;
+            mediaPlayer.stop();
+            playSongs();
+
+        }
+    }
 
     @Override
     public void start(Stage primaryStage) {
@@ -158,6 +237,43 @@ public class Main extends Application {
 
             root.getChildren().add(text);
 
+            playbtn.setOnAction(e -> {
+
+
+                if (songs.head != null && playing == false) {
+                    playSongs();
+
+                }
+                else if (playing  && !paused)  {
+                	playicon = "▶";
+                    playbtn.setText(playicon);
+                	mediaPlayer.pause();
+                	paused = true;
+
+                }else if(paused){
+                	playicon = "II";
+                    playbtn.setText(playicon);
+                	mediaPlayer.play();
+                	paused = false;
+                }
+
+            });
+
+            nextbtn.setOnAction((e) -> {
+                if (playing == true) {
+                    playNext();
+                }
+
+            });
+            prevbtn.setOnAction((e) -> {
+                playPrev();
+            });
+            shufflebtn.setOnAction((e) -> {
+
+            });
+            resetbtn.setOnAction(e -> {if (playing == true ){
+                mediaPlayer.seek(Duration.seconds(0)); }}
+            );
 
             insertbtn.setOnAction(e -> {
 
