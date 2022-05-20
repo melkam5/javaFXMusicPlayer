@@ -1,7 +1,10 @@
 package application;
 
 
+import java.io.File;
+import java.util.List;
 import javafx.application.Application;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -12,6 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 
@@ -20,19 +24,37 @@ public class Main extends Application {
     HBox hBox = new HBox();
     RadioButton radioButton = new RadioButton();
     Text radioText = new Text(" Loop");
+
     HBox hbox1 = new HBox();
     RadioButton radioButton1 = new RadioButton();
+
     Text groopName = new Text("© RegEx_Natives");
     Text radioText1 = new Text(" Shuffling");
-    Slider slider;
+
+    LinkedList songs = new LinkedList();
     Button playbtn ;
+    boolean loop = true;
+    boolean shuffling ;
     String playicon = "▶";
+
+    Slider slider;
 
     @Override
     public void start(Stage primaryStage) {
 
         radioButton.setSelected(true);
         radioButton1.setSelected(false);
+
+        radioButton.selectedProperty().addListener((ObservableValue<? extends Boolean> obs, Boolean wasPreviouslySelected, Boolean isNowSelected) -> {
+            if (isNowSelected) {
+                radioText.setText(" Loop");
+                loop = true;
+            } else {
+                radioText.setText(" No Loop");
+                loop = false;
+            }
+        });
+
 
 
         try {
@@ -136,12 +158,23 @@ public class Main extends Application {
 
             root.getChildren().add(text);
 
+
+            insertbtn.setOnAction(e -> {
+
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("AUDIO files ", "*.mp3", "*.wav"));
+
+                List<File> list = fileChooser.showOpenMultipleDialog(null);
+                list.forEach(i -> songs.addToEnd(i.toString()));
+
+            });
+
             primaryStage.show();
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-  }
+    }
 
     public static void main(String[] args) {
         launch(args);
