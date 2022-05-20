@@ -18,10 +18,4 @@ public class LinkedList {
         }
     }
 
-	public void printList(){
-		for(Node temp = this.head; temp!=null; temp = temp.next){
-			System.out.println(temp.filepath);
-	}
-	}
-
 }
